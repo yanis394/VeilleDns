@@ -51,3 +51,47 @@ def process_packet(packet):
             alert = f"[{timestamp}] ALERT - IP: {src_ip} - Domain: {domain} - Score: {score} - Status: {status}"
             alerts.append(alert)
             print(alert)
+
+
+def save_reports():
+    with open("dns_alerts.log", "w") as f_log:
+        for alert in alerts:
+            f_log.write(alert + "\n")
+
+    unique_ips = set()
+    domains_contacted = set()
+    max_score = 0
+
+    for alert in alerts:
+        parts = alert.split(" - ")
+        ip = parts[1].split(": ")[1]
+        domain = parts[2].split(": ")[1]
+        score = int(parts[3].split(": ")[1])
+        unique_ips.add(ip)
+        domains_contacted.add(domain)
+        max_score = max(max_score, score)
+
+    with open("summary_report.txt", "w") as f_summary:
+        f_summary.write("===== Résumé du LAB-02 - Analyse DNS =====\n")
+        f_summary.write(f"IPs suspectes : {', '.join(unique_ips)}\n")
+        f_summary.write(f"Domaines contactés : {', '.join(domains_contacted)}\n")
+        f_summary.write(f"Score de suspicion maximal : {max_score}\n")
+        if max_score >= 80:
+            f_summary.write("Recommandation : Blocage immédiat de l'IP source\n")
+        elif max_score >= 50:
+            f_summary.write("Recommandation : Surveillance accrue\n")
+        else:
+            f_summary.write("Recommandation : Aucune action urgente\n")
+
+
+def signal_handler(sig, frame):
+    print("\nArrêt détecté. Génération des rapports...")
+    save_reports()
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
+    print("Surveillance DNS en cours... (CTRL+C pour arrêter)")
+    sniff(filter="udp port 53", prn=process_packet)
+
