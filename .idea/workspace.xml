@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="96403d06-501a-4401-b0c3-11a11272a2ce" name="Changes" comment="start">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="96403d06-501a-4401-b0c3-11a11272a2ce" name="Changes" comment="variables">
       <change beforePath="$PROJECT_DIR$/SurveilleurDns.py" beforeDir="false" afterPath="$PROJECT_DIR$/SurveilleurDns.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -23,6 +22,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "yanis394"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/yanis394/VeilleDns",
+    "accountId": "b501791a-64d8-4774-a099-0773d7e4a5d5"
+  }
+}]]></component>
   <component name="ProjectColorInfo"><![CDATA[{
   "associatedIndex": 4
 }]]></component>
@@ -60,7 +71,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1748940240060</updated>
-      <workItem from="1748940241101" duration="865000" />
+      <workItem from="1748940241101" duration="1121000" />
     </task>
     <task id="LOCAL-00001" summary="start">
       <option name="closed" value="true" />
@@ -70,7 +81,31 @@
       <option name="project" value="LOCAL" />
       <updated>1748941235350</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="variables">
+      <option name="closed" value="true" />
+      <created>1748941405843</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1748941405843</updated>
+    </task>
+    <task id="LOCAL-00003" summary="variables">
+      <option name="closed" value="true" />
+      <created>1748941411733</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1748941411733</updated>
+    </task>
+    <task id="LOCAL-00004" summary="variables">
+      <option name="closed" value="true" />
+      <created>1748941541093</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1748941541093</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -89,6 +124,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="start" />
-    <option name="LAST_COMMIT_MESSAGE" value="start" />
+    <MESSAGE value="variables" />
+    <option name="LAST_COMMIT_MESSAGE" value="variables" />
   </component>
 </project>

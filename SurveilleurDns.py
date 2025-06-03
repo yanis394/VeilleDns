@@ -34,7 +34,20 @@ def score_domain(domain, src_ip):
 
     return min(score, 100)
 
+def process_packet(packet):
+    if packet.haslayer(DNSQR) and packet.haslayer(IP):
+        domain = packet[DNSQR].qname.decode().strip(".")
+        src_ip = packet[IP].src
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+        score = score_domain(domain, src_ip)
+        if score > 0:
+            status = "INFO"
+            if score >= 80:
+                status = "CRITICAL"
+            elif score >= 50:
+                status = "WARNING"
 
-
-fihrioeg
+            alert = f"[{timestamp}] ALERT - IP: {src_ip} - Domain: {domain} - Score: {score} - Status: {status}"
+            alerts.append(alert)
+            print(alert)
