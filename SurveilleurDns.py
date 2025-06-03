@@ -1,28 +1,21 @@
-#!/usr/bin/env python3
-
-from scapy.all import sniff, DNSQR, IP
+from pydivert import WinDivert
+from dnslib import DNSRecord
 from datetime import datetime
 import re
-import signal
-import sys
 
-# Liste noire de domaines
 BLACKLIST = {
     "malicious-domain.com",
     "suspiciousdomain.ru",
     "data-leak.xyz"
 }
 
-# TLD suspects
 SUSPICIOUS_TLDS = {".ru", ".xyz", ".top"}
 
-# Stockage des alertes et comptage des requêtes DNS
 alerts = []
 query_count = {}
 
 def score_domain(domain, src_ip):
     score = 0
-
     if domain in BLACKLIST:
         score += 80
     if len(domain) > 50:
@@ -40,24 +33,28 @@ def score_domain(domain, src_ip):
 
     return min(score, 100)
 
-def process_packet(packet):
-    if packet.haslayer(DNSQR) and packet.haslayer(IP):
-        domain = packet[DNSQR].qname.decode(errors="ignore").strip(".")
-        src_ip = packet[IP].src
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def analyze_packet(packet):
+    if packet.is_outbound and packet.dst_port == 53 and packet.payload:
+        try:
+            dns = DNSRecord.parse(packet.payload)
+            qname = str(dns.q.qname).strip(".")
+            src_ip = packet.src_addr
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            score = score_domain(qname, src_ip)
 
-        score = score_domain(domain, src_ip)
-        if score > 0:
-            if score >= 80:
-                status = "CRITICAL"
-            elif score >= 50:
-                status = "WARNING"
-            else:
-                status = "INFO"
+            if score > 0:
+                if score >= 80:
+                    status = "CRITICAL"
+                elif score >= 50:
+                    status = "WARNING"
+                else:
+                    status = "INFO"
 
-            alert = f"[{timestamp}] ALERT - IP: {src_ip} - Domain: {domain} - Score: {score} - Status: {status}"
-            alerts.append(alert)
-            print(alert)
+                alert = f"[{timestamp}] ALERT - IP: {src_ip} - Domain: {qname} - Score: {score} - Status: {status}"
+                alerts.append(alert)
+                print(alert)
+        except Exception as e:
+            pass  # Ignorer les paquets non-DNS ou malformés
 
 def save_reports():
     with open("dns_alerts.log", "w") as f_log:
@@ -77,7 +74,7 @@ def save_reports():
             unique_ips.add(ip)
             domains_contacted.add(domain)
             max_score = max(max_score, score)
-        except IndexError:
+        except:
             continue
 
     with open("summary_report.txt", "w") as f_summary:
@@ -92,13 +89,12 @@ def save_reports():
         else:
             f_summary.write("Recommandation : Aucune action urgente\n")
 
-def signal_handler(sig, frame):
-    print("\nArrêt détecté. Génération des rapports...")
-    save_reports()
-    sys.exit(0)
-
 if __name__ == "__main__":
-    signal.signal(signal.SIGINT, signal_handler)
-    print("Surveillance DNS en cours... (CTRL+C pour arrêter)")
-    sniff(filter="udp port 53", prn=process_packet, store=0)
-
+    print("Surveillance DNS (Windows) en cours... CTRL+C pour arrêter.")
+    try:
+        with WinDivert("outbound and udp.DstPort == 53") as w:
+            for packet in w:
+                analyze_packet(packet)
+    except KeyboardInterrupt:
+        print("\nArrêt détecté. Génération des rapports...")
+        save_reports()
