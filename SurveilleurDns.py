@@ -1,29 +1,35 @@
+#!/usr/bin/env python3
+
 from scapy.all import sniff, DNSQR, IP
 from datetime import datetime
 import re
 import signal
 import sys
 
+# Liste noire de domaines
 BLACKLIST = {
     "malicious-domain.com",
     "suspiciousdomain.ru",
     "data-leak.xyz"
 }
 
+# TLD suspects
 SUSPICIOUS_TLDS = {".ru", ".xyz", ".top"}
 
+# Stockage des alertes et comptage des requêtes DNS
 alerts = []
 query_count = {}
 
 def score_domain(domain, src_ip):
     score = 0
+
     if domain in BLACKLIST:
         score += 80
     if len(domain) > 50:
         score += 10
     if any(domain.endswith(tld) for tld in SUSPICIOUS_TLDS):
         score += 5
-    if re.match(r"^[a-z0-9]{12,}\.(ru|xyz|top)$", domain):
+    if re.match(r"^[a-z0-9\-]{12,}\.(ru|xyz|top)$", domain):
         score += 15
 
     now = datetime.now()
@@ -36,22 +42,22 @@ def score_domain(domain, src_ip):
 
 def process_packet(packet):
     if packet.haslayer(DNSQR) and packet.haslayer(IP):
-        domain = packet[DNSQR].qname.decode().strip(".")
+        domain = packet[DNSQR].qname.decode(errors="ignore").strip(".")
         src_ip = packet[IP].src
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         score = score_domain(domain, src_ip)
         if score > 0:
-            status = "INFO"
             if score >= 80:
                 status = "CRITICAL"
             elif score >= 50:
                 status = "WARNING"
+            else:
+                status = "INFO"
 
             alert = f"[{timestamp}] ALERT - IP: {src_ip} - Domain: {domain} - Score: {score} - Status: {status}"
             alerts.append(alert)
             print(alert)
-
 
 def save_reports():
     with open("dns_alerts.log", "w") as f_log:
@@ -63,13 +69,16 @@ def save_reports():
     max_score = 0
 
     for alert in alerts:
-        parts = alert.split(" - ")
-        ip = parts[1].split(": ")[1]
-        domain = parts[2].split(": ")[1]
-        score = int(parts[3].split(": ")[1])
-        unique_ips.add(ip)
-        domains_contacted.add(domain)
-        max_score = max(max_score, score)
+        try:
+            parts = alert.split(" - ")
+            ip = parts[1].split(": ")[1]
+            domain = parts[2].split(": ")[1]
+            score = int(parts[3].split(": ")[1])
+            unique_ips.add(ip)
+            domains_contacted.add(domain)
+            max_score = max(max_score, score)
+        except IndexError:
+            continue
 
     with open("summary_report.txt", "w") as f_summary:
         f_summary.write("===== Résumé du LAB-02 - Analyse DNS =====\n")
@@ -83,15 +92,13 @@ def save_reports():
         else:
             f_summary.write("Recommandation : Aucune action urgente\n")
 
-
 def signal_handler(sig, frame):
     print("\nArrêt détecté. Génération des rapports...")
     save_reports()
     sys.exit(0)
 
-
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     print("Surveillance DNS en cours... (CTRL+C pour arrêter)")
-    sniff(filter="udp port 53", prn=process_packet)
+    sniff(filter="udp port 53", prn=process_packet, store=0)
 
